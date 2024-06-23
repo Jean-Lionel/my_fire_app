@@ -1,6 +1,11 @@
-from django.urls import path
+from django.urls import include, path
+from rest_framework.routers import DefaultRouter
 from . import views
 
+router = DefaultRouter()
+router.register('micro_vms', views.MicroVMViewSet)
+
+
 urlpatterns = [
-  path('server_propreties/', views.getServerPropreties, name='server_propreties'),
+  path('', include(router.urls))
 ]
