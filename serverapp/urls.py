@@ -4,6 +4,7 @@ from . import views
 
 router = DefaultRouter()
 router.register('micro_vms', views.MicroVMViewSet)
+router.register('ip_tables', views.IpTableRouterViewSet)
 
 
 urlpatterns = [
