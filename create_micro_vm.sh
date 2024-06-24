@@ -99,8 +99,10 @@ sudo curl -X PUT --unix-socket "${API_SOCKET}" \
 # started before we attempt to SSH into it.
 sleep 2s
 
+chmod 700 ubuntu-22.04.id_rsa
+
 # Setup internet access in the guest
-ssh -i ./ubuntu-22.04.id_rsa root@$7 "ip route add default via ${TAP_IP} dev eth0" -y
+ssh -i ./ubuntu-22.04.id_rsa root@$7 "ip route add default via ${TAP_IP} dev eth0"
 
 # Setup DNS resolution in the guestip
-ssh -i ./ubuntu-22.04.id_rsa root@$7 "echo 'nameserver 8.8.8.8' > /etc/resolv.conf" -y
+ssh -i ./ubuntu-22.04.id_rsa root@$7 "echo 'nameserver 8.8.8.8' > /etc/resolv.conf"
