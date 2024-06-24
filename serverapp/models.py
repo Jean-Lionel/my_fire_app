@@ -22,5 +22,7 @@ class IpTableRouter(models.Model):
     id = models.AutoField(primary_key=True)
     server_ip = models.CharField(max_length=200, editable=False)
     micro_vm_ip = models.CharField(max_length=200, editable=False)
+    created_at = models.DateTimeField(auto_now_add=True, editable=False)
+    updated_at = models.DateTimeField(auto_now=True, editable=False)
     
     

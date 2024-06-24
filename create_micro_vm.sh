@@ -25,6 +25,7 @@ sudo iptables -I FORWARD 1 -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
 sudo iptables -I FORWARD 1 -i tap0 -o "$HOST_IFACE" -j ACCEPT
 
 API_SOCKET=$3
+touch $4
 LOGFILE=$4
 
 # Create log file
@@ -99,7 +100,7 @@ sudo curl -X PUT --unix-socket "${API_SOCKET}" \
 sleep 2s
 
 # Setup internet access in the guest
-ssh -i ./ubuntu-22.04.id_rsa root@$7 "ip route add default via ${TAP_IP} dev eth0"
+ssh -i ./ubuntu-22.04.id_rsa root@$7 "ip route add default via ${TAP_IP} dev eth0" -y
 
-# Setup DNS resolution in the guest
-ssh -i ./ubuntu-22.04.id_rsa root@$7 "echo 'nameserver 8.8.8.8' > /etc/resolv.conf"
+# Setup DNS resolution in the guestip
+ssh -i ./ubuntu-22.04.id_rsa root@$7 "echo 'nameserver 8.8.8.8' > /etc/resolv.conf" -y

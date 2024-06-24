@@ -1,5 +1,6 @@
 
 import json
+from re import split
 import subprocess
 from time import sleep
 from django.contrib.auth.models import Group, User
@@ -41,7 +42,7 @@ class MicroVMViewSet(viewsets.ModelViewSet):
         )
         ord.kernel = f"{ord.id}.vmlinux-5.10.217"
         ord.log_file = f"{pwd}/logs/log_file-{ord.id}.log"
-        ord.api_socket = f"/tmp/firecracker.socket"           
+        ord.api_socket = f"/tmp/firecracker{ord.id}.socket"           
         ord.ubuntu_iso = f"ubuntu-20.04-{ord.id}.ext4"
         ord.tap_dev = f"tap{ord.id}"
         
@@ -53,12 +54,11 @@ class MicroVMViewSet(viewsets.ModelViewSet):
         response = subprocess.Popen(["sudo", "./firecracker", "--api-sock", ord.api_socket]) 
         sleep(2)
         print(["sudo", "./create_micro_vm.sh", ord.tap_dev, ord.tap_ip, ord.api_socket,ord.log_file, ord.ubuntu_iso, ord.fc_mac,ord.eth_ip])
-        ex = subprocess.Popen(["sudo", "./create_micro_vm.sh", ord.tap_dev, ord.tap_ip, ord.api_socket,ord.log_file, ord.ubuntu_iso, ord.fc_mac,ord.eth_ip]) 
-        
+        ex = subprocess.Popen(["sudo", "./create_micro_vm.sh", ord.tap_dev, ord.tap_ip, ord.api_socket,ord.log_file, ord.ubuntu_iso, ord.fc_mac,ord.eth_ip])     
+        sleep(2)
         
         serializer = MicroVMSerializer(ord)
         return Response(serializer.data, status=200)
-        
         
        # return super().create(request, *args, **kwargs)
     @action(
@@ -94,4 +94,26 @@ class IpTableRouterViewSet(viewsets.ModelViewSet):
     queryset = IpTableRouter.objects.all()
     serializer_class = IpTableRouterSerializer
     
-    
+    def create(self, request, *args, **kwargs):
+        
+        serializer = IpTableRouterSerializer(data = request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+        server_ip = data['server_ip']
+        micro_vm_ip = data['micro_vm_ip']
+        last_oct = int(micro_vm_ip.split(".")[-1]) -2
+        addresse_reseau = f"{micro_vm_ip.split('.')[0]}.{micro_vm_ip.split('.')[1]}.{micro_vm_ip.split('.')[2]}.{last_oct}"
+        print("-"* 100)
+        print(addresse_reseau)
+        iptable = IpTableRouter(
+            server_ip = server_ip,
+            micro_vm_ip = micro_vm_ip           
+        )
+        iptable.save()
+        print("#" * 100)
+        print("sudo", "ip", "route", "add", f"{addresse_reseau}/30", "via", server_ip)
+        subprocess.Popen(["sudo", "ip", "route", "add", f"{addresse_reseau}/30", "via", server_ip])
+        
+        serializer = IpTableRouterSerializer(iptable)
+        
+        return Response(serializer.data, status=200)

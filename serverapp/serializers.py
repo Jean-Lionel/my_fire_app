@@ -16,5 +16,7 @@ class IpTableRouterSerializer(serializers.ModelSerializer):
     class  Meta:
         model = IpTableRouter
         fields = "__all__"
+       
+        
 
 
