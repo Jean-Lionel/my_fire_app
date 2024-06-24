@@ -32,14 +32,8 @@ class MicroVMViewSet(viewsets.ModelViewSet):
         id = data['id'] 
         
         pwd = os.getcwd()
-        
-        ord = MicroVM(
-            id = id,
-            fc_mac = fc_mac,
-            eth_ip = eth_ip,
-            tap_ip = tap_ip,
-            name = name
-        )
+
+        ord = MicroVM( id=id, fc_mac=fc_mac, eth_ip=eth_ip, tap_ip=tap_ip, name=name)
         ord.kernel = f"{ord.id}.vmlinux-5.10.217"
         ord.log_file = f"{pwd}/logs/log_file-{ord.id}.log"
         ord.api_socket = f"/tmp/firecracker{ord.id}.socket"           
@@ -47,20 +41,29 @@ class MicroVMViewSet(viewsets.ModelViewSet):
         ord.tap_dev = f"tap{ord.id}"
         
         ord.save()
-        print("#" * 100)
-        print(ord)
         subprocess.check_output(["sudo", "rm", "-f",  ord.api_socket])
         response = subprocess.check_output(["sudo", "cp", "ubuntu-22.04.ext4",  ord.ubuntu_iso])
         response = subprocess.Popen(["sudo", "./firecracker", "--api-sock", ord.api_socket]) 
-        sleep(2)
+        sleep(1)
         print(["sudo", "./create_micro_vm.sh", ord.tap_dev, ord.tap_ip, ord.api_socket,ord.log_file, ord.ubuntu_iso, ord.fc_mac,ord.eth_ip])
         ex = subprocess.Popen(["sudo", "./create_micro_vm.sh", ord.tap_dev, ord.tap_ip, ord.api_socket,ord.log_file, ord.ubuntu_iso, ord.fc_mac,ord.eth_ip])     
         sleep(2)
         
         serializer = MicroVMSerializer(ord)
         return Response(serializer.data, status=200)
-        
-       # return super().create(request, *args, **kwargs)
+    
+    @action(methods=['GET'], detail=False, url_name=r'restart', url_path=r"restart")
+    def restart(self, request, pk):
+        ord:MicroVM = self.get_object()
+        subprocess.check_output(["sudo", "rm", "-f",  ord.api_socket])
+        response = subprocess.check_output(["sudo", "cp", "ubuntu-22.04.ext4",  ord.ubuntu_iso])
+        response = subprocess.Popen(["sudo", "./firecracker", "--api-sock", ord.api_socket]) 
+        sleep(1)
+        print(["sudo", "./create_micro_vm.sh", ord.tap_dev, ord.tap_ip, ord.api_socket,ord.log_file, ord.ubuntu_iso, ord.fc_mac,ord.eth_ip])
+        ex = subprocess.Popen(["sudo", "./create_micro_vm.sh", ord.tap_dev, ord.tap_ip, ord.api_socket,ord.log_file, ord.ubuntu_iso, ord.fc_mac,ord.eth_ip])     
+        serializer = MicroVMSerializer(ord)
+        return Response(serializer.data, status=200)
+
     @action(
 		methods=['GET'], detail=False,
 		url_name=r'resources_monitor', url_path=r"resources_monitor")
@@ -105,13 +108,8 @@ class IpTableRouterViewSet(viewsets.ModelViewSet):
         addresse_reseau = f"{micro_vm_ip.split('.')[0]}.{micro_vm_ip.split('.')[1]}.{micro_vm_ip.split('.')[2]}.{last_oct}"
         print("-"* 100)
         print(addresse_reseau)
-        iptable = IpTableRouter(
-            server_ip = server_ip,
-            micro_vm_ip = micro_vm_ip           
-        )
+        iptable = IpTableRouter(server_ip = server_ip, micro_vm_ip = micro_vm_ip)
         iptable.save()
-        print("#" * 100)
-        print("sudo", "ip", "route", "add", f"{addresse_reseau}/30", "via", server_ip)
         subprocess.Popen(["sudo", "ip", "route", "add", f"{addresse_reseau}/30", "via", server_ip])
         
         serializer = IpTableRouterSerializer(iptable)
