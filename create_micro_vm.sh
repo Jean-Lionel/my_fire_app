@@ -102,7 +102,7 @@ sleep 2s
 chmod 700 ubuntu-22.04.id_rsa
 
 # Setup internet access in the guest
-ssh -i ./ubuntu-22.04.id_rsa root@$7 "ip route add default via ${TAP_IP} dev eth0"
+ssh -o StrictHostKeyChecking=accept-new -i ./ubuntu-22.04.id_rsa root@$7 "ip route add default via ${TAP_IP} dev eth0"
 
 # Setup DNS resolution in the guestip
 ssh -i ./ubuntu-22.04.id_rsa root@$7 "echo 'nameserver 8.8.8.8' > /etc/resolv.conf"
